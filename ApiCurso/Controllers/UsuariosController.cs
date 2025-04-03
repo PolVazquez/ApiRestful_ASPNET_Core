@@ -20,6 +20,7 @@ namespace ApiCurso.Controllers
 
         // Obtener todos los usuarios
         [HttpGet]
+        [ResponseCache(CacheProfileName = "Default30")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [EnableCors("CorsPolicy")]  //Aplica políticas solo a este endpoint
         public IActionResult GetUsuarios()
@@ -41,6 +42,7 @@ namespace ApiCurso.Controllers
 
         // Obtener un usuario por ID
         [HttpGet("{id:int}", Name = "GetUsuario")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, NoStore = false)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [EnableCors("CorsPolicy")]  //Aplica políticas solo a este endpoint
