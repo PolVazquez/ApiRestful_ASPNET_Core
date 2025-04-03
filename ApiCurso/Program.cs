@@ -3,6 +3,7 @@ using ApiCurso.Mapper;
 using ApiCurso.Repository;
 using ApiCurso.Repository.IRepository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -14,7 +15,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("SqlConnection")));
 
-builder.Services.AddControllers();
+//Soporte para cache
+builder.Services.AddResponseCaching();
+
+builder.Services.AddControllers(options =>
+{
+    //Cache para todos los endpoints y no tener que agregar el atributo [ResponseCache] en todos los endpoints
+    options.CacheProfiles.Add("Default30", new CacheProfile() { Duration = 30 });
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
@@ -25,7 +34,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Description = "Autentificación JWT usando el esquema Bearer. \r\n\r\n" +
         "Ingresa la palabra 'Bearer' seguido de un [espacio] y después su token en el campo de abajo.\r\n\r\n" +
-        "Ejemplo: \"Bearer tkopskfkpsldkfpiojukjmoipjk\"",
+        "Ejemplo: \"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Scheme = "Bearer"
@@ -78,7 +87,7 @@ builder.Services.AddCors(builder =>
 {
     builder.AddPolicy("CorsPolicy", options =>
     {
-        options.AllowAnyHeader().WithOrigins("http://localhost:1234");
+        options.AllowAnyHeader().WithOrigins("https://localhost:7174");
     });
 });
 
