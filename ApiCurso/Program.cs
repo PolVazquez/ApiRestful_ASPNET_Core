@@ -1,9 +1,11 @@
 using ApiCurso.Data;
 using ApiCurso.Mapper;
+using ApiCurso.Model;
 using ApiCurso.Repository;
 using ApiCurso.Repository.IRepository;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -15,6 +17,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("SqlConnection")));
+
+//Soporte para autenticación con .Net Identity
+builder.Services.AddIdentity<AppUsuario, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 
 //Soporte para cache
 builder.Services.AddResponseCaching();
@@ -142,26 +147,30 @@ builder.Services.AddCors(builder =>
     });
 });
 
-//Soporte AutoMapper
-builder.Services.AddAutoMapper(typeof(PeliculasMapper));
+//Add AutoMapper
+builder.Services.AddAutoMapper(typeof(EntityToDtoReverseMapper));
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Api Curso v1");
-        options.SwaggerEndpoint("/swagger/v2/swagger.json", "Api Curso v2");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+        options.SwaggerEndpoint("/swagger/v2/swagger.json", "v2");
     });
 }
+
 
 app.UseHttpsRedirection();
 
 //Soporte para CORS
 app.UseCors("CorsPolicy");
+
+app.UseAuthentication();
 
 //Soporte para autenticación
 app.UseAuthorization();

@@ -6,9 +6,9 @@ using AutoMapper;
 
 namespace ApiCurso.Mapper
 {
-    public class PeliculasMapper : Profile
+    public class EntityToDtoReverseMapper : Profile
     {
-        public PeliculasMapper()
+        public EntityToDtoReverseMapper()
         {
             CreateMap<Categoria, CategoriaDto>().ReverseMap();
             CreateMap<Categoria, AddCategoriaDto>().ReverseMap();
@@ -21,6 +21,8 @@ namespace ApiCurso.Mapper
             CreateMap<Usuario, UsuarioDataDto>().ReverseMap();
             CreateMap<Usuario, UsuarioLoginDto>().ReverseMap();
             CreateMap<Usuario, UsuarioLoginResponseDto>().ReverseMap();
+
+            CreateMap<AppUsuario, UsuarioDataDto>().ReverseMap();
         }
     }
 }
