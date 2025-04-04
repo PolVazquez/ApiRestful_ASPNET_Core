@@ -1,6 +1,7 @@
 ﻿using ApiCurso.Model;
 using ApiCurso.Model.Dto.Usuario;
 using ApiCurso.Repository.IRepository;
+using Asp.Versioning;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -10,8 +11,9 @@ using System.Net;
 namespace ApiCurso.Controllers
 {
     [Authorize(Roles = "admin")]
-    [Route("api/usuarios")]
+    [Route("api/v{version:apiVersion}/usuarios")]
     [ApiController]
+    [ApiVersionNeutral]
     public class UsuariosController(IUsuarioRepository usuarioRepository, IMapper mapper) : ControllerBase
     {
         private readonly IUsuarioRepository _usuarioRepository = usuarioRepository;

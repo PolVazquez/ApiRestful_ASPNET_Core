@@ -1,15 +1,17 @@
 ﻿using ApiCurso.Model;
 using ApiCurso.Model.Dto.Categoria;
 using ApiCurso.Repository.IRepository;
+using Asp.Versioning;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApiCurso.Controllers
+namespace ApiCurso.Controllers.V1
 {
     [Authorize(Roles = "admin")]
-    [Route("api/categorias")]
+    [Route("api/v{version:apiVersion}/categorias")]
     [ApiController]
+    [ApiVersion("1.0", Deprecated = true)]
     public class CategoriasController(ICategoriaRepository categoriaRepository, IMapper mapper) : ControllerBase
     {
         private readonly ICategoriaRepository _categoriaRepository = categoriaRepository;
@@ -151,6 +153,14 @@ namespace ApiCurso.Controllers
             }
 
             return NoContent();
+        }
+
+        [AllowAnonymous]
+        [HttpGet("GetString")]
+        [Obsolete("Este método está obsoleto. Use el endpoint GetString en la versión 2.0.")]
+        public IEnumerable<string> Get()
+        {
+            return new string[] { "value1", "value2" };
         }
     }
 }
