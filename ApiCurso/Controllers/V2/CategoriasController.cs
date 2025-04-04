@@ -10,6 +10,8 @@ namespace ApiCurso.Controllers.V2
     [Route("api/v{version:apiVersion}/categorias")]
     [ApiController]
     [ApiVersion("2.0")]
+    [ApiExplorerSettings(GroupName = "v2")]
+
     public class CategoriasController(ICategoriaRepository categoriaRepository, IMapper mapper) : ControllerBase
     {
         private readonly ICategoriaRepository _categoriaRepository = categoriaRepository;

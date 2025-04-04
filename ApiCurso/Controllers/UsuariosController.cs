@@ -43,12 +43,12 @@ namespace ApiCurso.Controllers
         }
 
         // Obtener un usuario por ID
-        [HttpGet("{id:int}", Name = "GetUsuario")]
+        [HttpGet("{id}", Name = "GetUsuario")]
         [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, NoStore = false)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [EnableCors("CorsPolicy")]  //Aplica políticas solo a este endpoint
-        public IActionResult GetUsuario(int id)
+        public IActionResult GetUsuario(string id)
         {
             try
             {

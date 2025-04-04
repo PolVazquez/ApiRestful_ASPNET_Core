@@ -3,6 +3,8 @@ using ApiCurso.Model;
 using ApiCurso.Model.Dto.Usuario;
 using ApiCurso.Repository.IRepository;
 using ApiCurso.Security;
+using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -14,92 +16,97 @@ namespace ApiCurso.Repository
     public class UsuarioRepository : IUsuarioRepository
     {
         private readonly ApplicationDbContext _db;
+        private readonly UserManager<AppUsuario> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IMapper _mapper;
         private string secretApi;
-        public UsuarioRepository(ApplicationDbContext db, IConfiguration configuration)
+
+        public UsuarioRepository(ApplicationDbContext db, IConfiguration configuration, UserManager<AppUsuario> userManager, RoleManager<IdentityRole> roleManager, IMapper mapper)
         {
             _db = db;
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _mapper = mapper;
             secretApi = configuration.GetValue<string>("ApiSettings:secret");
         }
 
-        public Usuario GetUsuario(int id)
-            => _db.Usuarios.FirstOrDefault(u => u.Id == id);
+        public AppUsuario GetUsuario(string id)
+            => _db.AppUsuarios.FirstOrDefault(u => u.Id == id);
 
-        public ICollection<Usuario> GetUsuarios()
-            => _db.Usuarios.OrderBy(u => u.NombreUsuario).ToList();
+        public ICollection<AppUsuario> GetUsuarios()
+            => _db.AppUsuarios.OrderBy(u => u.UserName).ToList();
 
         public bool IsUniqueUser(string usuario)
-            => _db.Usuarios.All(u => u.NombreUsuario != usuario);
+            => _db.AppUsuarios.All(u => u.UserName != usuario);
 
         public async Task<UsuarioLoginResponseDto> Login(UsuarioLoginDto dto)
         {
             // Buscar el usuario en la base de datos por nombre de usuario
-            var usuario = await _db.Usuarios
-                .FirstOrDefaultAsync(u => u.NombreUsuario.ToLower() == dto.NombreUsuario.ToLower());
+            var usuario = await _db.AppUsuarios
+                .FirstOrDefaultAsync(u => u.UserName.ToLower() == dto.NombreUsuario.ToLower());
 
-            // Verificar si el usuario existe
-            if (usuario == null)
+            bool isValid = await _userManager.CheckPasswordAsync(usuario, dto.Password);
+            if (usuario == null || !isValid)
             {
                 return new UsuarioLoginResponseDto()
                 {
                     Token = "",
-                    Usuario = null
-                }; // Usuario no encontrado
+                    Usuario = null,
+                    Role = null
+                };
             }
 
-            // Comparar la contraseña ingresada con la almacenada
-            bool isPasswordValid = PasswordHasher.VerifyPassword(dto.Password, usuario.Password);
-
-            if (!isPasswordValid)
-            {
-                return null; // Contraseña incorrecta
-            }
-
-            // Si todo está bien, devolver los datos del usuario autenticado
+            var roles = await _userManager.GetRolesAsync(usuario);
             var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(secretApi);
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
-                    new Claim(ClaimTypes.Role, usuario.Role),
-                    new Claim(ClaimTypes.Name, usuario.NombreUsuario)
+                    new Claim(ClaimTypes.Name, usuario.UserName),
+                    new Claim(ClaimTypes.Role, roles.FirstOrDefault())
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretApi)), SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
-            // Crear el token
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
-
-            // Devolver el token y los datos del usuario
             return new UsuarioLoginResponseDto()
             {
-                Token = tokenString,
-                Usuario = new UsuarioDataDto()
-                {
-                    Id = usuario.Id,
-                    UserName = usuario.NombreUsuario,
-                    Name = usuario.Nombre,
-                    Role = usuario.Role
-                }
+                Token = tokenHandler.WriteToken(token),
+                Usuario = _mapper.Map<UsuarioDataDto>(usuario)
             };
         }
 
 
-        public async Task<Usuario> Register(UsuarioRegisterDto dto)
+        public async Task<UsuarioDataDto> Register(UsuarioRegisterDto dto)
         {
-            var usuario = new Usuario
+            var appUsuario = new AppUsuario
             {
-                NombreUsuario = dto.NombreUsuario,
-                Nombre = dto.Nombre,
-                Password = PasswordHasher.HashPassword(dto.Password),
-                Role = dto.Role
+                UserName = dto.NombreUsuario,
+                Email = dto.NombreUsuario,
+                NormalizedEmail = dto.NombreUsuario.ToUpper(),
+                Nombre = dto.Nombre
             };
-            _db.Usuarios.Add(usuario);
-            await _db.SaveChangesAsync();
+            var result = await _userManager.CreateAsync(appUsuario, dto.Password);
 
-            return usuario;
+            if (result.Succeeded)
+            {
+                if (!_roleManager.RoleExistsAsync("admin").GetAwaiter().GetResult())
+                {
+                    await _roleManager.CreateAsync(new IdentityRole("admin"));
+                    await _roleManager.CreateAsync(new IdentityRole("registered"));
+                }
+
+                await _userManager.AddToRoleAsync(appUsuario, "admin");
+                var resultUser = _db.AppUsuarios.FirstOrDefault(u => u.UserName.ToLower() == dto.NombreUsuario.ToLower());
+
+                return _mapper.Map<UsuarioDataDto>(resultUser);
+            }
+
+            return new UsuarioDataDto();
         }
     }
 }
