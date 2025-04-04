@@ -30,7 +30,12 @@ namespace ApiCurso.Controllers
             try
             {
                 var listaUsuarios = _usuarioRepository.GetUsuarios();
-                _responseAPI.Result = _mapper.Map<List<UsuarioDto>>(listaUsuarios);
+                var dtos = new List<UsuarioDto>();
+                foreach (var item in listaUsuarios)
+                {
+                    dtos.Add(_mapper.Map<UsuarioDto>(item));
+                }
+                _responseAPI.Result = dtos;
                 _responseAPI.StatusCode = HttpStatusCode.OK;
             }
             catch (Exception ex)

@@ -4,6 +4,7 @@ using ApiCurso.Model;
 using ApiCurso.Repository;
 using ApiCurso.Repository.IRepository;
 using Asp.Versioning;
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -62,7 +63,7 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Api Curso v1",
-        Version = "v1",
+        Version = "1.0",
         Description = "API para el curso de ASP.NET Core Web API con C# y SQL Server",
         TermsOfService = new Uri("https://example.com/terms"),
         Contact = new OpenApiContact()
@@ -79,7 +80,7 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v2", new OpenApiInfo
     {
         Title = "Api Curso v2",
-        Version = "v2",
+        Version = "2.0",
         Description = "API para el curso de ASP.NET Core Web API con C# y SQL Server",
         TermsOfService = new Uri("https://example.com/terms"),
         Contact = new OpenApiContact()
@@ -150,6 +151,13 @@ builder.Services.AddCors(builder =>
 //Add AutoMapper
 builder.Services.AddAutoMapper(typeof(EntityToDtoReverseMapper));
 
+var configuration = new MapperConfiguration(cfg =>
+{
+    cfg.AddProfile<EntityToDtoReverseMapper>();
+    cfg.AllowNullCollections = true;
+    // Otras configuraciones de mapeo
+}).CreateMapper();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -159,8 +167,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.SwaggerEndpoint("/swagger/v2/swagger.json", "v2");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Api Curso v1");
+        options.SwaggerEndpoint("/swagger/v2/swagger.json", "Api Curso v2");
     });
 }
 

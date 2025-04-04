@@ -7,10 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 namespace ApiCurso.Controllers.V2
 {
     [Authorize(Roles = "admin")]
-    [Route("api/v{version:apiVersion}/categorias")]
-    [ApiController]
     [ApiVersion("2.0")]
+    [Route("api/v{version:apiVersion}/categorias")]
     [ApiExplorerSettings(GroupName = "v2")]
+    [ApiController]
 
     public class CategoriasController(ICategoriaRepository categoriaRepository, IMapper mapper) : ControllerBase
     {
