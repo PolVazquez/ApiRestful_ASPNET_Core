@@ -1,15 +1,17 @@
 ﻿using ApiCurso.Model;
 using ApiCurso.Model.Dto.Pelicula;
 using ApiCurso.Repository.IRepository;
+using Asp.Versioning;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApiCurso.Controllers
+namespace ApiCurso.Controllers.V1
 {
     [Authorize(Roles = "admin")]
-    [Route("api/peliculas")]
+    [Route("api/v{version:apiVersion}/peliculas")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class PeliculasController(IPeliculaRepository peliculaRepository, IMapper mapper) : ControllerBase
     {
         private readonly IMapper _mapper = mapper;

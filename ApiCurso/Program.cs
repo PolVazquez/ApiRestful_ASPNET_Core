@@ -2,6 +2,7 @@ using ApiCurso.Data;
 using ApiCurso.Mapper;
 using ApiCurso.Repository;
 using ApiCurso.Repository.IRepository;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -53,9 +54,43 @@ builder.Services.AddSwaggerGen(options =>
                 In = ParameterLocation.Header
             }, new List<string> { } }
     });
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Api Curso v1",
+        Version = "v1",
+        Description = "API para el curso de ASP.NET Core Web API con C# y SQL Server",
+        TermsOfService = new Uri("https://example.com/terms"),
+        Contact = new OpenApiContact()
+        {
+            Name = "VazquezCoder",
+            Url = new Uri("https://example.com/contact")
+        },
+        License = new OpenApiLicense()
+        {
+            Name = "Licencia de uso",
+            Url = new Uri("https://example.com/license")
+        }
+    });
+    options.SwaggerDoc("v2", new OpenApiInfo
+    {
+        Title = "Api Curso v2",
+        Version = "v2",
+        Description = "API para el curso de ASP.NET Core Web API con C# y SQL Server",
+        TermsOfService = new Uri("https://example.com/terms"),
+        Contact = new OpenApiContact()
+        {
+            Name = "VazquezCoder",
+            Url = new Uri("https://example.com/contact")
+        },
+        License = new OpenApiLicense()
+        {
+            Name = "Licencia de uso",
+            Url = new Uri("https://example.com/license")
+        }
+    });
 });
 
-//Add repository's
+//Soporte repository's
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<IPeliculaRepository, PeliculaRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
@@ -79,7 +114,23 @@ builder.Services.AddAuthentication(j =>
     };
 });
 
-//CORS
+//Soporte para versionado de API
+var apiVersioningBuilder = builder.Services.AddApiVersioning(options =>
+{
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+    //options.ApiVersionReader = ApiVersionReader.Combine(
+    //    new QueryStringApiVersionReader("api-version"));
+});
+
+apiVersioningBuilder.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+//Soporte CORS
 //Habilitar: 1-Un único dominio, 2- Multiples dominios, 3- Todos los dominios
 //Ejemplo: http://localhost:1234
 //(*) para todos los dominios
@@ -91,7 +142,7 @@ builder.Services.AddCors(builder =>
     });
 });
 
-//Add AutoMapper
+//Soporte AutoMapper
 builder.Services.AddAutoMapper(typeof(PeliculasMapper));
 
 var app = builder.Build();
@@ -100,7 +151,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Api Curso v1");
+        options.SwaggerEndpoint("/swagger/v2/swagger.json", "Api Curso v2");
+    });
 }
 
 app.UseHttpsRedirection();
